@@ -1,0 +1,193 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model bidang_minat {
+  id_bidang   String       @id @db.VarChar(36)
+  nama_bidang String       @db.VarChar(255)
+  kode        String       @db.VarChar(50)
+  skor_minat  skor_minat[]
+  user_input  user_input[]
+}
+
+model hasil_saw {
+  id             String         @id @db.VarChar(36)
+  id_input       String         @db.VarChar(36)
+  id_jurusan     String         @db.VarChar(36)
+  vektor_nilai   Decimal        @default(0.000000) @db.Decimal(10, 6)
+  peringkat      Int            @default(0)
+  user_input     user_input     @relation(fields: [id_input], references: [id_input], onDelete: Cascade, onUpdate: NoAction, map: "hasil_saw_ibfk_1")
+  master_jurusan master_jurusan @relation(fields: [id_jurusan], references: [id_jurusan], onDelete: NoAction, onUpdate: NoAction, map: "hasil_saw_ibfk_2")
+
+  @@unique([id_input, id_jurusan], map: "id_input")
+  @@index([id_jurusan], map: "id_jurusan")
+  @@index([id_input], map: "idx_saw_input")
+  @@index([id_input, peringkat], map: "idx_saw_input_rank")
+}
+
+model hasil_topsis {
+  id             String         @id @db.VarChar(36)
+  id_input       String         @db.VarChar(36)
+  id_jurusan     String         @db.VarChar(36)
+  d_plus         Decimal        @default(0.000000) @db.Decimal(10, 6)
+  d_minus        Decimal        @default(0.000000) @db.Decimal(10, 6)
+  skor_ci        Decimal        @default(0.000000) @db.Decimal(10, 6)
+  peringkat      Int            @default(0)
+  user_input     user_input     @relation(fields: [id_input], references: [id_input], onDelete: Cascade, onUpdate: NoAction, map: "hasil_topsis_ibfk_1")
+  master_jurusan master_jurusan @relation(fields: [id_jurusan], references: [id_jurusan], onDelete: NoAction, onUpdate: NoAction, map: "hasil_topsis_ibfk_2")
+
+  @@unique([id_input, id_jurusan], map: "id_input")
+  @@index([id_jurusan], map: "id_jurusan")
+  @@index([id_input], map: "idx_hasil_input")
+  @@index([id_input, peringkat], map: "idx_hasil_input_rank")
+}
+
+model hasil_wp {
+  id             String         @id @db.VarChar(36)
+  id_input       String         @db.VarChar(36)
+  id_jurusan     String         @db.VarChar(36)
+  vektor_s       Decimal        @default(0.000000) @db.Decimal(10, 6)
+  nilai_v        Decimal        @default(0.000000) @db.Decimal(10, 6)
+  peringkat      Int            @default(0)
+  user_input     user_input     @relation(fields: [id_input], references: [id_input], onDelete: Cascade, onUpdate: NoAction, map: "hasil_wp_ibfk_1")
+  master_jurusan master_jurusan @relation(fields: [id_jurusan], references: [id_jurusan], onDelete: NoAction, onUpdate: NoAction, map: "hasil_wp_ibfk_2")
+
+  @@unique([id_input, id_jurusan], map: "id_input")
+  @@index([id_jurusan], map: "id_jurusan")
+  @@index([id_input], map: "idx_wp_input")
+  @@index([id_input, peringkat], map: "idx_wp_input_rank")
+}
+
+model mapel_pendukung {
+  id             String         @id @db.VarChar(36)
+  id_jurusan     String         @db.VarChar(36)
+  id_mapel       String         @db.VarChar(36)
+  master_jurusan master_jurusan @relation(fields: [id_jurusan], references: [id_jurusan], onDelete: Cascade, onUpdate: NoAction, map: "mapel_pendukung_ibfk_1")
+  master_mapel   master_mapel   @relation(fields: [id_mapel], references: [id_mapel], onDelete: Cascade, onUpdate: NoAction, map: "mapel_pendukung_ibfk_2")
+
+  @@unique([id_jurusan, id_mapel], map: "id_jurusan")
+  @@index([id_mapel], map: "id_mapel")
+  @@index([id_jurusan], map: "idx_mapel_pendukung_jurusan")
+}
+
+model master_jurusan {
+  id_jurusan        String              @id @db.VarChar(36)
+  nama_jurusan      String              @db.VarChar(255)
+  rumpun            String              @default("Saintek") @db.VarChar(50)
+  gaji_rata         Decimal?            @db.Decimal(15, 2)
+  c3_rating         Decimal?            @default(3.0) @db.Decimal(3, 1)
+  c4_rating         Decimal?            @default(3.0) @db.Decimal(3, 1)
+  c5_rating         Decimal?            @default(3.0) @db.Decimal(3, 1)
+  created_at        DateTime?           @default(now()) @db.Timestamp(0)
+  hasil_saw         hasil_saw[]
+  hasil_topsis      hasil_topsis[]
+  hasil_wp          hasil_wp[]
+  mapel_pendukung   mapel_pendukung[]
+  matriks_keputusan matriks_keputusan[]
+  skor_minat        skor_minat[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model master_kriteria {
+  id_kriteria       String              @id @db.VarChar(36)
+  nama_kriteria     String              @db.VarChar(255)
+  sifat             String              @db.VarChar(10)
+  bobot             Decimal             @default(0.000000) @db.Decimal(10, 6)
+  deskripsi         String?             @db.Text
+  matriks_keputusan matriks_keputusan[]
+}
+
+model master_mapel {
+  id_mapel        String            @id @db.VarChar(36)
+  nama_mapel      String            @db.VarChar(255)
+  mapel_pendukung mapel_pendukung[]
+  nilai_rapor     nilai_rapor[]
+}
+
+model matriks_keputusan {
+  id              String          @id @db.VarChar(36)
+  id_input        String          @db.VarChar(36)
+  id_jurusan      String          @db.VarChar(36)
+  id_kriteria     String          @db.VarChar(36)
+  nilai_kriteria  Decimal         @default(0.000000) @db.Decimal(10, 6)
+  nilai_normalis  Decimal         @default(0.000000) @db.Decimal(10, 6)
+  nilai_terbobot  Decimal         @default(0.000000) @db.Decimal(10, 6)
+  user_input      user_input      @relation(fields: [id_input], references: [id_input], onDelete: Cascade, onUpdate: NoAction, map: "matriks_keputusan_ibfk_1")
+  master_jurusan  master_jurusan  @relation(fields: [id_jurusan], references: [id_jurusan], onDelete: NoAction, onUpdate: NoAction, map: "matriks_keputusan_ibfk_2")
+  master_kriteria master_kriteria @relation(fields: [id_kriteria], references: [id_kriteria], onDelete: NoAction, onUpdate: NoAction, map: "matriks_keputusan_ibfk_3")
+
+  @@unique([id_input, id_jurusan, id_kriteria], map: "id_input")
+  @@index([id_jurusan], map: "id_jurusan")
+  @@index([id_kriteria], map: "id_kriteria")
+  @@index([id_input], map: "idx_matriks_input")
+  @@index([id_input, id_kriteria], map: "idx_matriks_input_kriteria")
+}
+
+model nilai_rapor {
+  id           String       @id @db.VarChar(36)
+  id_input     String       @db.VarChar(36)
+  id_mapel     String       @db.VarChar(36)
+  nilai        Decimal      @db.Decimal(5, 2)
+  user_input   user_input   @relation(fields: [id_input], references: [id_input], onDelete: Cascade, onUpdate: NoAction, map: "nilai_rapor_ibfk_1")
+  master_mapel master_mapel @relation(fields: [id_mapel], references: [id_mapel], onDelete: NoAction, onUpdate: NoAction, map: "nilai_rapor_ibfk_2")
+
+  @@unique([id_input, id_mapel], map: "id_input")
+  @@index([id_mapel], map: "id_mapel")
+  @@index([id_input], map: "idx_nilai_rapor_input")
+}
+
+model skor_minat {
+  id             String         @id @db.VarChar(36)
+  id_jurusan     String         @db.VarChar(36)
+  id_bidang      String         @db.VarChar(36)
+  skor           Decimal        @default(0.00) @db.Decimal(5, 2)
+  master_jurusan master_jurusan @relation(fields: [id_jurusan], references: [id_jurusan], onDelete: Cascade, onUpdate: NoAction, map: "skor_minat_ibfk_1")
+  bidang_minat   bidang_minat   @relation(fields: [id_bidang], references: [id_bidang], onDelete: Cascade, onUpdate: NoAction, map: "skor_minat_ibfk_2")
+
+  @@unique([id_jurusan, id_bidang], map: "id_jurusan")
+  @@index([id_bidang], map: "idx_skor_minat_bidang")
+  @@index([id_jurusan], map: "idx_skor_minat_jurusan")
+}
+
+model user_input {
+  id_input          String              @id @db.VarChar(36)
+  id_user           String?             @db.VarChar(36)
+  nama_siswa        String              @db.VarChar(255)
+  id_bidang_minat   String              @db.VarChar(36)
+  bobot_w1          Decimal?            @db.Decimal(5, 2)
+  bobot_w2          Decimal?            @db.Decimal(5, 2)
+  bobot_w3          Decimal?            @db.Decimal(5, 2)
+  bobot_w4          Decimal?            @db.Decimal(5, 2)
+  bobot_w5          Decimal?            @db.Decimal(5, 2)
+  created_at        DateTime?           @default(now()) @db.Timestamp(0)
+  hasil_saw         hasil_saw[]
+  hasil_topsis      hasil_topsis[]
+  hasil_wp          hasil_wp[]
+  matriks_keputusan matriks_keputusan[]
+  nilai_rapor       nilai_rapor[]
+  bidang_minat      bidang_minat        @relation(fields: [id_bidang_minat], references: [id_bidang], onDelete: NoAction, onUpdate: NoAction, map: "user_input_ibfk_1")
+  users             users?              @relation(fields: [id_user], references: [id_user], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([id_bidang_minat], map: "id_bidang_minat")
+  
+}
+model users {
+  id_user    String       @id @default(uuid()) @db.VarChar(36)
+  nama       String       @db.VarChar(255)
+  email      String       @unique @db.VarChar(255)
+  password   String       @db.VarChar(255)
+  role       users_role   @default(siswa)
+  created_at DateTime?    @default(now()) @db.Timestamp(0)
+
+  user_input user_input[]
+}
+
+enum users_role {
+  admin
+  siswa
+}
